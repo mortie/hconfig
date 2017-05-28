@@ -1,4 +1,28 @@
+
 # HConf
+
+Better config files with node.js.
+
+<!-- toc -->
+
+- [HConf](#hconf)
+  * [Usage](#usage)
+  * [UNIX style config files](#unix-style-config-files)
+  * [API](#api)
+    + [hconf.parseFile(filename, includeRoot)](#hconfparsefilefilename-includeroot)
+    + [hconf.parseString(string, includeRoot)](#hconfparsestringstring-includeroot)
+    + [hconf.parseConfFile(file, sections)](#hconfparseconffilefile-sections)
+    + [hconf.parseConfString(string, sections)](#hconfparseconfstringstring-sections)
+  * [Syntax](#syntax)
+    + [Strings](#strings)
+    + [Numbers](#numbers)
+    + [Booleans and null](#booleans-and-null)
+    + [Objects](#objects)
+    + [Arrays](#arrays)
+    + [Sections](#sections)
+    + [Comments](#comments)
+
+<!-- tocstop -->
 
 HConf is a configuration file parser with JSON-like syntax but without all the
 cruft. It's not intended to be used for communication between computers, but
