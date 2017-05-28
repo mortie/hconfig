@@ -1,30 +1,28 @@
-
-# HConf
+# HConfig
 
 Better config files with node.js.
 
 <!-- toc -->
 
-- [HConf](#hconf)
-  * [Usage](#usage)
-  * [UNIX style config files](#unix-style-config-files)
-  * [API](#api)
-    + [hconf.parseFile(filename, includeRoot)](#hconfparsefilefilename-includeroot)
-    + [hconf.parseString(string, includeRoot)](#hconfparsestringstring-includeroot)
-    + [hconf.parseConfFile(file, sections)](#hconfparseconffilefile-sections)
-    + [hconf.parseConfString(string, sections)](#hconfparseconfstringstring-sections)
-  * [Syntax](#syntax)
-    + [Strings](#strings)
-    + [Numbers](#numbers)
-    + [Booleans and null](#booleans-and-null)
-    + [Objects](#objects)
-    + [Arrays](#arrays)
-    + [Sections](#sections)
-    + [Comments](#comments)
+- [Usage](#usage)
+- [UNIX style config files](#unix-style-config-files)
+- [API](#api)
+  * [hconfig.parseFile(filename, includeRoot)](#hconfigparsefilefilename-includeroot)
+  * [hconfig.parseString(string, includeRoot)](#hconfigparsestringstring-includeroot)
+  * [hconfig.parseConfFile(file, sections)](#hconfigparseconffilefile-sections)
+  * [hconfig.parseConfString(string, sections)](#hconfigparseconfstringstring-sections)
+- [Syntax](#syntax)
+  * [Strings](#strings)
+  * [Numbers](#numbers)
+  * [Booleans and null](#booleans-and-null)
+  * [Objects](#objects)
+  * [Arrays](#arrays)
+  * [Sections](#sections)
+  * [Comments](#comments)
 
 <!-- tocstop -->
 
-HConf is a configuration file parser with JSON-like syntax but without all the
+HConfig is a configuration file parser with JSON-like syntax but without all the
 cruft. It's not intended to be used for communication between computers, but
 rather to be written by humans.
 
@@ -50,21 +48,21 @@ virtual-hosts [
 Install:
 
 ```
-npm install hconf
+npm install hconfig
 ```
 
 Use:
 
 ```
-var hconf = require("hconf");
+var hconfig = require("hconfig");
 
-hconf.parseFile(filename);
+hconfig.parseFile(filename);
 // or
-hconf.parseString(string);
+hconfig.parseString(string);
 // or
-hconf.parseConfFile(filename);
+hconfig.parseConfFile(filename);
 // or
-hconf.parseConfString(strinf);
+hconfig.parseConfString(strinf);
 ```
 
 To run tests (requires mocha):
@@ -82,7 +80,7 @@ editors) let you include other files, which is incredibly important in many
 situations, and neither JSON nor the JSON replacements out there are really
 built with that in mind.
 
-With hconf, you can create two files, say foo.hcnf and bar.hcnf, like this:
+With hconfig, you can create two files, say foo.hcnf and bar.hcnf, like this:
 
 `foo.hcnf:`
 ```
@@ -134,7 +132,7 @@ feature for including other configuration files.
 
 ## API
 
-### hconf.parseFile(filename, includeRoot)
+### hconfig.parseFile(filename, includeRoot)
 
 Parse a file, in the simple JSON.parse-style way.
 
@@ -143,11 +141,11 @@ without braces, and return an object. However, if **includeRoot** is set to
 true, it will parse any value; `{foo 10}` will be the object `{foo: 10}`, but
 `"hello world"` will be a string, etc.
 
-### hconf.parseString(string, includeRoot)
+### hconfig.parseString(string, includeRoot)
 
 Like parseFile, but with a string instead of a file.
 
-### hconf.parseConfFile(file, sections)
+### hconfig.parseConfFile(file, sections)
 
 Parse a file in the mode detailed under the "UNIX style config files" heading.
 
@@ -156,7 +154,7 @@ and an error will be thrown if the config file contains sections not in the
 array. This will throw an error, for example:
 
 ```
-hconf.parseConfFile("foo.hcnf", [ "virtual-host" ]);
+hconfig.parseConfFile("foo.hcnf", [ "virtual-host" ]);
 ```
 
 `foo.hcnf:`
@@ -164,13 +162,13 @@ hconf.parseConfFile("foo.hcnf", [ "virtual-host" ]);
 virtual-hots example.com { webroot /var/www }
 ```
 
-### hconf.parseConfString(string, sections)
+### hconfig.parseConfString(string, sections)
 
 Like parseConfFile, but with a string instead of a file.
 
 ## Syntax
 
-HConf contains the basic javascript data types; strings, numbers, objects,
+HConfig contains the basic javascript data types; strings, numbers, objects,
 arrays, booleans, and null. In addition, it has the concept of sections,
 though those only exist when using parseConfFile and parseConfString.
 
