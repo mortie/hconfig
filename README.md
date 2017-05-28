@@ -94,7 +94,7 @@ hconfig.parseString(string);
 // or
 hconfig.parseConfFile(filename);
 // or
-hconfig.parseConfString(strinf);
+hconfig.parseConfString(string);
 ```
 
 To run tests (requires mocha):
