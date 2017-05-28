@@ -1,0 +1,12 @@
+port 8080
+host localhost
+index [ .html .htm ]
+
+virtual-hosts [
+
+	# This is where I host my cat pictures
+	{ host cats.example.com webroot /home/me/www/mycats }
+
+	# Srs bsns
+	{ host resume.example.com webroot /home/me/www/resume }
+]

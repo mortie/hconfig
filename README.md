@@ -193,7 +193,7 @@ though those only exist when using parseConfFile and parseConfString.
 * A key value pair is a string followed by a value. There is no separator
   between pairs, nor symbol between the key and value, other than whitespace.
 
-`{ port 8080 host example.com } => { port: 8080, host: example.com }`
+`{ port 8080 host example.com }` => `{ port: 8080, host: "example.com" }`
 
 ### Arrays
 
@@ -201,7 +201,7 @@ though those only exist when using parseConfFile and parseConfString.
   terminated with `]`.
 * Like with objects, there is no separator between values.
 
-`[ 10 20 50 ] => [10, 20 50]`
+`[ 10 20 50 ]` => `[10, 20 50]`
 
 ### Sections
 
@@ -225,6 +225,10 @@ becomes:
 	]
 }
 ```
+
+### Include
+
+* An include is the string `include`, followed by a 
 
 ### Comments
 

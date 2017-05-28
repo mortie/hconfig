@@ -1,0 +1,9 @@
+virtual-host http://cats.example.com {
+	webroot /var/www/mycats
+}
+
+virtual-host http://resume.example.com {
+	webroot /var/www/resume
+}
+
+include example-2-2.hcnf

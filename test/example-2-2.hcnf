@@ -1,0 +1,5 @@
+virtual-host https://webmail.example.com {
+	webroot  /var/www/webmail
+	ssl-cert /etc/ssl/example.com.pem
+	ssl-key  /etc/ssl/example.com.key
+}

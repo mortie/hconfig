@@ -329,7 +329,7 @@ class Parser {
 		}
 
 		var parser = new Parser(stream, this.sections, this.data);
-		parser.parse();
+		parser.parseSections();
 	}
 
 	parseSection() {

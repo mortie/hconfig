@@ -135,3 +135,36 @@ describe("interface", () => {
 		});
 	});
 });
+
+describe("example files", () => {
+	it("example 1", () => {
+		assert.deepEqual(
+			parser.parseFile("test/example-1.hcnf"),
+			{
+				port: 8080,
+				host: "localhost",
+				index: [ ".html", ".htm" ],
+				"virtual-hosts": [
+					{ host: "cats.example.com", webroot: "/home/me/www/mycats" },
+					{ host: "resume.example.com", webroot: "/home/me/www/resume" },
+				],
+			});
+	});
+
+	it("example 2", () => {
+		assert.deepEqual(
+			parser.parseConfFile("test/example-2.hcnf"),
+			{
+				"virtual-host": [
+					{ name: "http://cats.example.com", webroot: "/var/www/mycats" },
+					{ name: "http://resume.example.com", webroot: "/var/www/resume" },
+					{
+						name: "https://webmail.example.com",
+						"ssl-cert": "/etc/ssl/example.com.pem",
+						"ssl-key": "/etc/ssl/example.com.key",
+						webroot: "/var/www/webmail",
+					},
+				]
+			});
+	});
+});
