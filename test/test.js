@@ -134,6 +134,43 @@ describe("interface", () => {
 				});
 		});
 	});
+
+	describe("parseConf", () => {
+		it("throws an error if an unspecified section is given", () => {
+			try {
+				parser.parseConfString(
+					"general { port 8080 } general { port 8081 }",
+					{ general: "once" });
+			} catch (err) {
+				if (err.hconfigParseError)
+					return;
+				else
+					throw err;
+			}
+			throw new Error("Expected an error to be thrown");
+		});
+
+		it("returns sections which only exist once as an object", () => {
+			assert.deepEqual(
+				parser.parseConfString(
+					"general { port 8080 }",
+					{ general: "once" }),
+				{ general: { name: null, port: 8080 } });
+		});
+
+		it("returns sections which exist multiple times as an array", () => {
+			assert.deepEqual(
+				parser.parseConfString(
+					"foo { bar baz } foo { baz bar }",
+					{ foo: true }),
+				{
+					foo: [
+						{ name: null, bar: "baz" },
+						{ name: null, baz: "bar" },
+					]
+				});
+		});
+	});
 });
 
 describe("example files", () => {

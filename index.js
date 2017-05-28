@@ -222,10 +222,14 @@ class TokenStream {
 			this.file+":"+token.linenr+": "+msg);
 	}
 
+	errFormat(token) {
+		return "line "+token.linenr;
+	}
+
 	err(token, msg) {
 		var err = new Error(
-			this.file+":"+token.linenr+": "+msg);
-		err.rcParseError = true;
+			this.errFormat(token)+": "+msg);
+		err.hconfigParseError = true;
 		throw err;
 	}
 
@@ -252,6 +256,10 @@ class FileTokenStream extends TokenStream {
 		this.file = file;
 		this.fd = fs.openSync(file, "r");
 		this.init();
+	}
+
+	errFormat(token) {
+		return this.file+":"+token.linenr;
 	}
 
 	_nextChar() {
@@ -286,6 +294,25 @@ class Parser {
 
 		this.sections = sections;
 		this.data = data || {};
+	}
+
+	validateSection(section) {
+		if (this.sections == null)
+			return;
+
+		if (this.sections[section.content] === true)
+			return;
+
+		if (this.sections[section.content] === "once") {
+			if (this.data[section.content])
+				this.stream.err(
+					section,
+					"Expected section "+section.content+" to exist only once");
+
+			return;
+		}
+
+		this.stream.err("Unknown section: "+section.content);
 	}
 
 	parseSections() {
@@ -337,25 +364,30 @@ class Parser {
 
 		// <section>
 		var section = stream.expect(TokenTypes.STRING);
-		if (
-				(this.sections != null) &&
-				(this.sections.indexOf(section.content) === -1)) {
-			stream.err(section, "Unknown section name: "+section.content);
-		}
+
+		this.validateSection(section);
 
 		// [name property]
 		var sub = null;
 		if (stream.currToken.type === TokenTypes.STRING)
 			sub = stream.expect(TokenTypes.STRING).content;
 
+
 		// <object>
 		var obj = this.parseObject();
 
 		obj.name = sub;
 
-		if (this.data[section.content] == null)
-			this.data[section.content] = [];
-		this.data[section.content].push(obj);
+		// If the section is specified to exist only once, we want the parsed
+		// object to be the root of data[section.content].
+		// Otherwise, we want data[section.content] to be an array.
+		if (this.sections && this.sections[section.content] === "once") {
+			this.data[section.content] = obj;
+		} else {
+			if (this.data[section.content] == null)
+				this.data[section.content] = [];
+			this.data[section.content].push(obj);
+		}
 	}
 
 	parseArray() {
@@ -440,14 +472,14 @@ function parseString(str, includeRoot) {
 
 function parseConfFile(file, sections) {
 	var stream = new FileTokenStream(file);
-	var parser = new Parser(stream);
+	var parser = new Parser(stream, sections);
 	parser.parseSections();
 	return parser.data;
 }
 
 function parseConfString(str, sections) {
 	var stream = new StringTokenStream(str);
-	var parser = new Parser(stream);
+	var parser = new Parser(stream, sections);
 	parser.parseSections();
 	return parser.data;
 }

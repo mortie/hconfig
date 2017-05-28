@@ -149,12 +149,12 @@ Like parseFile, but with a string instead of a file.
 
 Parse a file in the mode detailed under the "UNIX style config files" heading.
 
-If the sections parameter is an array of strings, they will act as a whitelist,
+If the sections parameter is an object, they will act as a whitelist,
 and an error will be thrown if the config file contains sections not in the
-array. This will throw an error, for example:
+object. This will throw an error, for example:
 
 ```
-hconfig.parseConfFile("foo.hcnf", [ "virtual-host" ]);
+hconfig.parseConfFile("foo.hcnf", { "virtual-host": true });
 ```
 
 `foo.hcnf:`
@@ -162,9 +162,48 @@ hconfig.parseConfFile("foo.hcnf", [ "virtual-host" ]);
 virtual-hots example.com { webroot /var/www }
 ```
 
+You can also specify that a section should only exist once. This will thus
+throw an error:
+
+```
+hconfig.parseConfFile("foo.hcnf", { "general": "once" });
+```
+
+`foo.hcnf:`
+```
+general { 
+	port 8080
+}
+
+general {
+	port 8081
+}
+```
+
 ### hconfig.parseConfString(string, sections)
 
 Like parseConfFile, but with a string instead of a file.
+
+## Error handling
+
+If the parser encounters a problem with the file it's parsing, it will
+throw an instance of the Error object. To differentiate parse errors from bugs
+in HConfig, a `hconfigParseError` property is set to `true`. I would suggest
+handling errors something like this:
+
+```
+let data;
+try {
+	data = hconfig.parseFile("conf.hcnf");
+} catch (err) {
+	if (err.hconfigParseError) {
+		console.error(err.message);
+		process.exit(1);
+	} else {
+		throw err;
+	}
+}
+```
 
 ## Syntax
 
