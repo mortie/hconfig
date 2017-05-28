@@ -176,14 +176,19 @@ describe("interface", () => {
 describe("example files", () => {
 	it("example 1", () => {
 		assert.deepEqual(
-			parser.parseFile("test/example-1.hcnf"),
+			parser.parseConfFile(
+				"test/example-1.hcnf",
+				{ general: "once", "virtual-host": true }),
 			{
-				port: 8080,
-				host: "localhost",
-				index: [ ".html", ".htm" ],
-				"virtual-hosts": [
-					{ host: "cats.example.com", webroot: "/home/me/www/mycats" },
-					{ host: "resume.example.com", webroot: "/home/me/www/resume" },
+				general: {
+					name: null,
+					port: 8080,
+					host: "localhost",
+					index: [ ".html", ".htm" ],
+				},
+				"virtual-host": [
+					{ name: "cats.example.com", webroot: "/var/www/mycats" },
+					{ name: "resume.example.com", webroot: "/var/www/resume" },
 				],
 			});
 	});

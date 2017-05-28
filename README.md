@@ -30,20 +30,50 @@ rather to be written by humans.
 
 Here's an example config file for an imaginary web server:
 
+`conf.hcnf:`
 ```
-port 8080
-host localhost
-index [ .html .htm ]
+general {
+	port 8080
+	host localhost
+	index [ .html .htm ]
+}
 
-virtual-hosts [
+# This is where I host my cat pictures
+virtual-host cats.example.com {
+	webroot /var/www/mycats
+}
 
-	# This is where I host my cat pictures
-	{ host cats.example.com webroot /home/me/www/mycats }
-
-	# Srs bsns
-	{ host resume.example.com webroot /home/me/www/resume }
-]
+# Srs bsns
+virtual-host resume.example.com {
+	webroot /var/www/resume
+}
 ```
+
+Parse it with this line:
+
+``` javascript
+hconfig.parseConfFile("conf.hcnf",
+	{ general: "once", "virtual-host": true });
+```
+
+and it returns this object:
+
+``` json
+{
+	"general": {
+		"port": 8080,
+		"host": "localhost",
+		"index": [ ".html", ".htm" ]
+	},
+	"virtual-host": [
+		{ "name": "cats.example.com", "webroot": "/var/www/mycats" },
+		{ "name": "resume.example.com", "webroot": "/var/www/resume" }
+	]
+}
+```
+
+`general` is an object, becasue we specified that it only exists once.
+`virtual-host` is an array, because we only specified that it existst.
 
 ## Usage
 
@@ -109,7 +139,7 @@ virtual-host https://webmail.example.com {
 If our imaginary web server runs `hcnf.parseConfFile("foo.hcnf")`, it will get
 a data structure which looks like this:
 
-```
+``` json
 {
 	"virtual-host": [
 		{
@@ -258,7 +288,7 @@ virtual-host blog.example.com { foo 15 }
 
 becomes:
 
-```
+``` json
 {
 	"virtual-host": [
 		{ "name": "example.com", "foo": 10 },
@@ -269,7 +299,11 @@ becomes:
 
 ### Include
 
-* An include is the string `include`, followed by a 
+* An include is the string `include`, followed by another string, in the root
+  of the file.
+* It's only valid when parsed with parseConfFile or parseConfString.
+* Includes the file at the specified path, relative to the current file (or the
+  cwd if parseConfString is used).
 
 ### Comments
 

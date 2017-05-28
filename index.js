@@ -312,7 +312,7 @@ class Parser {
 			return;
 		}
 
-		this.stream.err("Unknown section: "+section.content);
+		this.stream.err(section, "Unknown section: "+section.content);
 	}
 
 	parseSections() {
@@ -411,8 +411,9 @@ class Parser {
 		var stream = this.stream;
 
 		// '{'
-		if (!ignoreBraces)
+		if (!ignoreBraces) {
 			stream.expect(TokenTypes.OPENBRACE);
+		}
 
 		// [values]
 		var obj = {};
