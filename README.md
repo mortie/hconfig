@@ -11,6 +11,7 @@ Better config files with node.js.
   * [hconfig.parseString(string, includeRoot)](#hconfigparsestringstring-includeroot)
   * [hconfig.parseConfFile(file, sections)](#hconfigparseconffilefile-sections)
   * [hconfig.parseConfString(string, sections)](#hconfigparseconfstringstring-sections)
+- [Error handling](#error-handling)
 - [Syntax](#syntax)
   * [Strings](#strings)
   * [Numbers](#numbers)
@@ -18,6 +19,7 @@ Better config files with node.js.
   * [Objects](#objects)
   * [Arrays](#arrays)
   * [Sections](#sections)
+  * [Include](#include)
   * [Comments](#comments)
 
 <!-- tocstop -->
