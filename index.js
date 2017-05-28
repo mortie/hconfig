@@ -335,8 +335,6 @@ class Parser {
 	parseSection() {
 		var stream = this.stream;
 
-		var obj = {};
-
 		// <section>
 		var section = stream.expect(TokenTypes.STRING);
 		if (
@@ -349,20 +347,11 @@ class Parser {
 		var sub = null;
 		if (stream.currToken.type === TokenTypes.STRING)
 			sub = stream.expect(TokenTypes.STRING).content;
+
+		// <object>
+		var obj = this.parseObject();
+
 		obj.name = sub;
-
-		// '{'
-		stream.expect(TokenTypes.OPENBRACE);
-
-		// <properties>
-		while (stream.currToken.type !== TokenTypes.CLOSEBRACE) {
-			var name = stream.expect(TokenTypes.STRING);
-			var val = this.parseValue();
-			obj[name.content] = val;
-		}
-
-		// '}'
-		stream.expect(TokenTypes.CLOSEBRACE);
 
 		if (this.data[section.content] == null)
 			this.data[section.content] = [];

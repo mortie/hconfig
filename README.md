@@ -60,7 +60,7 @@ built with that in mind.
 
 With hconf, you can create two files, say foo.hcnf and bar.hcnf, like this:
 
-foo.hcnf:
+`foo.hcnf:`
 ```
 virtual-host http://cats.example.com {
 	webroot /var/www/mycats
@@ -73,7 +73,7 @@ virtual-host http://resume.example.com {
 include bar.hcnf
 ```
 
-bar.hcnf:
+`bar.hcnf:`
 ```
 virtual-host https://webmail.example.com {
 	webroot  /var/www/webmail
@@ -129,13 +129,13 @@ Parse a file in the mode detailed under the "UNIX style config files" heading.
 
 If the sections parameter is an array of strings, they will act as a whitelist,
 and an error will be thrown if the config file contains sections not in the
-array. This will throw an error for example:
+array. This will throw an error, for example:
 
 ```
 hconf.parseConfFile("foo.hcnf", [ "virtual-host" ]);
 ```
 
-foo.hcnf:
+`foo.hcnf:`
 ```
 virtual-hots example.com { webroot /var/www }
 ```
@@ -171,8 +171,40 @@ though those only exist when using parseConfFile and parseConfString.
 * A key value pair is a string followed by a value. There is no separator
   between pairs, nor symbol between the key and value, other than whitespace.
 
+`{ port 8080 host example.com } => { port: 8080, host: example.com }`
+
 ### Arrays
 
 * An array starts with a `[`, followed by any number of values, and is
   terminated with `]`.
 * Like with objects, there is no separator between values.
+
+`[ 10 20 50 ] => [10, 20 50]`
+
+### Sections
+
+* A "section" only exists when parsed with parseConfFile or parseConfString.
+* The root of the file is a whitespace separated list of sections.
+* They start with a mandatory string (the section name), followed by an
+  optional string (the name property), followed by an object.
+
+```
+virtual-host example.com { foo 10 }
+virtual-host blog.example.com { foo 15 }
+```
+
+becomes:
+
+```
+{
+	"virtual-host": [
+		{ "name": "example.com", "foo": 10 },
+		{ "name": "blog.example.com", "foo": 15 }
+	]
+}
+```
+
+### Comments
+
+* Comments start with a #.
+* Everything from # to the end of the line is a comment, and thus ignored.
