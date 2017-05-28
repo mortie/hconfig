@@ -1,0 +1,14 @@
+{
+  "name": "hconf",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/test.js"
+  },
+  "author": "Martin Dørum <martid0311@gmail.com> (http://mort.coffee)",
+  "license": "ISC"
+}

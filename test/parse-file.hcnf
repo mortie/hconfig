@@ -1,0 +1,6 @@
+foo {
+	bar 55
+	baz "Hello World"
+}
+
+bar 10

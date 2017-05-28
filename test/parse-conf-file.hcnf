@@ -1,0 +1,11 @@
+foo bar {
+	baz 10
+}
+
+foo no {
+	baz 99
+}
+
+bar {
+	a b
+}
