@@ -39,7 +39,7 @@ var TokenTypes = new Enum(
 	"CLOSEBRACE",
 	"UNKNOWN");
 
-function makeToken(type, linenr, content) {
+function makeToken(type, linenr, content, isQuoted) {
 	if (content == null) {
 		content = TokenTypes.match(type, {
 			STRING: "[string]",
@@ -54,7 +54,7 @@ function makeToken(type, linenr, content) {
 			UNKNOWN: "[unknown]",
 		});
 	}
-	return { type, linenr, content };
+	return { type, linenr, content, isQuoted };
 }
 
 function isspace(ch) {
@@ -191,7 +191,7 @@ class TokenStream {
 				this.readChar();
 			}
 
-			return makeToken(TokenTypes.STRING, this.linenr, content);
+			return makeToken(TokenTypes.STRING, this.linenr, content, true);
 		}
 
 		// string without quotes, or bool
@@ -213,17 +213,17 @@ class TokenStream {
 			else if (content === "null")
 				return makeToken(TokenTypes.NULL, this.linenr);
 			else
-				return makeToken(TokenTypes.STRING, this.linenr, content);
+				return makeToken(TokenTypes.STRING, this.linenr, content, false);
 		}
-	}
-
-	warn(token, msg) {
-		console.error(
-			this.file+":"+token.linenr+": "+msg);
 	}
 
 	errFormat(token) {
 		return "line "+token.linenr;
+	}
+
+	warn(token, msg) {
+		console.error(
+			this.errFormat(token)+": "+msg);
 	}
 
 	err(token, msg) {
@@ -321,7 +321,8 @@ class Parser {
 		while (stream.currToken.type !== TokenTypes.EOF) {
 			if (
 					(stream.currToken.type === TokenTypes.STRING) &&
-					(stream.currToken.content === "include"))
+					(stream.currToken.content === "include") &&
+					(!stream.currToken.isQuoted))
 				this.include();
 			else
 				this.parseSection();
@@ -338,15 +339,19 @@ class Parser {
 		var file = stream.expect(TokenTypes.STRING);
 
 		var path;
-		if (this.stream instanceof FileTokenStream) {
-			var dirname = pathlib.dirname(this.stream.file);
-			path = pathlib.join(dirname, file.content);
-		} else {
+		if (pathlib.isAbsolute(file.content)) {
 			path = file.content;
-		}
+		} else {
+			if (this.stream instanceof FileTokenStream) {
+				var dirname = pathlib.dirname(this.stream.file);
+				path = pathlib.join(dirname, file.content);
 
-		if (pathlib.normalize(stream.file) === pathlib.normalize(path))
-			stream.err(file, "Attempted to include self");
+				if (pathlib.normalize(stream.file) === pathlib.normalize(path))
+					stream.err(file, "Attempted to include self");
+			} else {
+				path = file.content;
+			}
+		}
 
 		var stream;
 		try {

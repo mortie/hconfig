@@ -299,11 +299,12 @@ becomes:
 
 ### Include
 
-* An include is the string `include`, followed by another string, in the root
-  of the file.
+* An include is the unquoted string `include`, followed by another string, in
+  the root of the file (e.g not inside any section).
 * It's only valid when parsed with parseConfFile or parseConfString.
-* Includes the file at the specified path, relative to the current file (or the
-  cwd if parseConfString is used).
+* Includes the file at the specified path, which can be relative or absolute.
+* Relative paths are relative to the file, or the current directory if parsed
+  with parseConfString.
 
 ### Comments
 
