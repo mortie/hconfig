@@ -199,7 +199,9 @@ class TokenStream {
 			content += this.currChar;
 			cont = () => (
 				!isspace(this.nextChar) &&
+				this.nextChar != '[' &&
 				this.nextChar != ']' &&
+				this.nextChar != '{' &&
 				this.nextChar != '}');
 			while (cont()) {
 				content += this.nextChar;
@@ -294,25 +296,134 @@ class Parser {
 
 		this.sections = sections;
 		this.data = data || {};
+
+		if (sections) {
+			for (var i in sections) {
+				var sec = sections[i];
+				if (sec === "once") {
+					sections[i] = { count: "once" };
+				} else if (sec === "many") {
+					sections[i] = { count: "many" };
+				} else if (typeof sec !== "object") {
+					throw new Error(
+						"Invalid section specifier for "+i+": "+sec);
+				}
+
+				this.validateSectionSpecifier(i, sections[i]);
+			}
+		}
 	}
 
-	validateSection(section) {
-		if (this.sections == null)
+	validateSectionSpecifier(name, sec) {
+		function err(msg) {
+			throw new Error(
+				"Invalid section specifier for "+name+": "+msg);
+		}
+
+		// If props doesn't exist, just make one with a '*': "any"
+		if (!sec.props)
+			sec.props = { "*": "any" };
+
+		// Make sure the property 'name' exists
+		if (sec.props.name === undefined)
+			sec.props.name = [ "string", "null" ];
+
+		// Validate that the count is many or once
+		if (sec.count !== "many" && sec.count !== "once")
+			err("Expected count to be 'many' or 'once', got "+sec.count);
+
+		// Validate that all types are sane
+		var knownTypes = [ "string", "number", "array", "object", "bool", "null", "any" ];
+		for (var i in sec.props) {
+
+			// Allow people to specify single allowed types as strings
+			// rather than arrays
+			if (typeof sec.props[i] === "string")
+				sec.props[i] = [sec.props[i]];
+
+			var prop = sec.props[i];
+
+			// Only known types should be specified
+			for (var j in prop) {
+				if (knownTypes.indexOf(prop[j]) === -1)
+					err("Property "+i+": Unexpected type "+prop[j]);
+			}
+
+			// Doesn't make sense to specify type "any" in addition to others
+			if (prop.length > 1 && prop.indexOf("any") !== -1)
+				err("Property "+i+": Type 'any' must be specified alone");
+		}
+	}
+
+	validatePropType(token, i, prop, types) {
+		if (types == null) {
+			this.stream.err(
+				token,
+				"Section "+token.content+": Unknown property "+i);
+		}
+
+		if (types.indexOf("any") !== -1)
 			return;
 
-		if (this.sections[section.content] === true)
-			return;
+		// Finding the type of a javascript object is slightly ugly
+		var type = typeof prop;
+		if (prop === null)
+			type = "null";
+		else if (prop instanceof Array)
+			type = "array";
+		else if (type === "boolean")
+			type = "bool";
 
-		if (this.sections[section.content] === "once") {
-			if (this.data[section.content])
-				this.stream.err(
-					section,
-					"Expected section "+section.content+" to exist only once");
+		// Error if invalid type
+		if (types.indexOf(type) === -1) {
+			var str = types.length === 1
+				? types[0]
+				: "one of ("+types.join(", ")+")";
 
+			this.stream.err(
+				token,
+				"Section "+token.content+", property "+i+": "+
+				"Expected "+str+", got "+type);
+		}
+	}
+
+	// Validate section, then insert if it's valid
+	insertSection(token, obj) {
+		var name = token.content;
+
+		if (this.sections == null) {
+			if (!this.data[name])
+				this.data[name] = [];
+			this.data[name].push(obj);
 			return;
 		}
 
-		this.stream.err(section, "Unknown section: "+section.content);
+		var sec = this.sections[name];
+
+		if (!sec)
+			this.stream.err(token, "Unknown section: "+name);
+
+		// Validate that count='once' sections only appear once
+		if (sec.count === "once" && this.data[name])
+			this.stream.err(
+				token, "Expected section "+name+" to exist only once");
+
+		// Validate types for properties, if props exists
+		if (sec.props) {
+			for (var i in obj) {
+				var types = sec.props[i] || sec.props["*"];
+				this.validatePropType(token, i, obj[i], types)
+			}
+		}
+
+		// Insert
+		if (sec.count === "once") {
+			this.data[name] = obj;
+		} else if (sec.count === "many") {
+			if (!this.data[name])
+				this.data[name] = [];
+			this.data[name].push(obj);
+		}
 	}
 
 	parseSections() {
@@ -370,29 +481,22 @@ class Parser {
 		// <section>
 		var section = stream.expect(TokenTypes.STRING);
 
-		this.validateSection(section);
 
 		// [name property]
-		var sub = null;
-		if (stream.currToken.type === TokenTypes.STRING)
-			sub = stream.expect(TokenTypes.STRING).content;
-
+		var sub = undefined;
+		if (stream.currToken.type !== TokenTypes.OPENBRACE)
+			sub = this.parseValue();
 
 		// <object>
 		var obj = this.parseObject();
 
-		obj.name = sub;
+		if (sub !== undefined)
+			obj.name = sub;
+		else
+			obj.name = null;
 
-		// If the section is specified to exist only once, we want the parsed
-		// object to be the root of data[section.content].
-		// Otherwise, we want data[section.content] to be an array.
-		if (this.sections && this.sections[section.content] === "once") {
-			this.data[section.content] = obj;
-		} else {
-			if (this.data[section.content] == null)
-				this.data[section.content] = [];
-			this.data[section.content].push(obj);
-		}
+		// Insert and validate section
+		this.insertSection(section, obj);
 	}
 
 	parseArray() {

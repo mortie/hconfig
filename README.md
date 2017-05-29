@@ -53,7 +53,7 @@ Parse it with this line:
 
 ``` javascript
 hconfig.parseConfFile("conf.hcnf",
-	{ general: "once", "virtual-host": true });
+	{ general: "once", "virtual-host": "many" });
 ```
 
 and it returns this object:
@@ -73,7 +73,7 @@ and it returns this object:
 ```
 
 `general` is an object, becasue we specified that it only exists once.
-`virtual-host` is an array, because we only specified that it existst.
+`virtual-host` is an array, because we specified that it can exist many times.
 
 ## Usage
 
@@ -142,18 +142,18 @@ a data structure which looks like this:
 ``` json
 {
 	"virtual-host": [
-		{
-			"name": "http://cats.example.com",
+	{
+		"name": "http://cats.example.com",
 			"webroot": "/var/www/mycats"
-		}, {
-			"name": "http://resume.example.com",
+	}, {
+		"name": "http://resume.example.com",
 			"webroot": "/var/www/resume"
-		}, {
-			"name": "https://webmail.example.com",
+	}, {
+		"name": "https://webmail.example.com",
 			"webroot": "/var/www/webmail",
 			"ssl-cert": "/etc/ssl/example.com.pem",
 			"ssl-key": "/etc/ssl/example.co.key"
-		}
+	}
 	]
 }
 ```
@@ -186,7 +186,7 @@ and an error will be thrown if the config file contains sections not in the
 object. This will throw an error, for example:
 
 ```
-hconfig.parseConfFile("foo.hcnf", { "virtual-host": true });
+hconfig.parseConfFile("foo.hcnf", { "virtual-host": "many" });
 ```
 
 `foo.hcnf:`
@@ -237,6 +237,77 @@ try {
 }
 ```
 
+## Validation
+
+It's useful for the user to get error messages whenever they've configured
+something incorrectly, so HConfig has a built-in way to specify the structure
+of your config files to give useful error messages.
+
+Available types: `string`, `number`, `array`, `object`, `bool`, `null`, `any`.
+Note that a type specified as `null` can be either null or undefined.
+
+```
+hconfig.parseConfFile("foo.hcnf", {
+	general: {
+		count: "once",
+		props: {
+			port: "number",
+			host: "string",
+			index: [ "array", "string" ]
+		}
+	},
+	"virtual-host": {
+		count: "many",
+		props: {
+			webroot: "string",
+			"ssl-cert": "string",
+			"ssl-key": "string"
+		}
+	}
+});
+```
+
+You can also validate the `name` property (the value between the section name
+and the section block) like any other, but unlike other properties, it defaults
+to `[ "string", "null" ]`. but if you manually set it, it can be any type
+except for objects (as that syntax would just be confusing). Let's say you want
+to allow people to use an array of hostnames in virtual-host (but not allow it
+to be unspecified):
+
+```
+hconfig.parseConfFile("foo.hcnf", {
+	"virtual-host": {
+		count: "many",
+		props: {
+			name: [ "string", "array" ],
+			webroot: "string"
+		}
+	}
+});
+```
+
+`foo.hcnf`:
+```
+virtual-host [ www.example.com example.com] {
+	webroot /var/www/example.com
+}
+```
+
+You can also specify the default validation of properties by using `*`. Unless
+a default is specified, unknown properties will result in an error.
+
+Here we allow unknown properties to be anything:
+
+```
+hconfig.parseConfFile("foo.hcnf", {
+	general: {
+		props: {
+			"*": "any"
+		}
+	}
+})
+```
+
 ## Syntax
 
 HConfig contains the basic javascript data types; strings, numbers, objects,
@@ -247,7 +318,7 @@ though those only exist when using parseConfFile and parseConfString.
 
 * A quoted string starts with a `"`, and continues until the next `"`.
 * An unquoted string is a sequence of any characters other than whitespace,
-  `]`, and `}`, which doesn't match any other syntax.
+  `[`, `]`, `[`, and `}`, and which doesn't match any other syntax.
 
 ### Numbers
 
@@ -272,7 +343,7 @@ though those only exist when using parseConfFile and parseConfString.
   terminated with `]`.
 * Like with objects, there is no separator between values.
 
-`[ 10 20 50 ]` => `[10, 20 50]`
+`[ 10 20 50 ]` => `[ 10, 20 50 ]`
 
 ### Sections
 

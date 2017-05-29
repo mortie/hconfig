@@ -162,7 +162,7 @@ describe("interface", () => {
 			assert.deepEqual(
 				parser.parseConfString(
 					"foo { bar baz } foo { baz bar }",
-					{ foo: true }),
+					{ foo: "many" }),
 				{
 					foo: [
 						{ name: null, bar: "baz" },
@@ -178,7 +178,7 @@ describe("example files", () => {
 		assert.deepEqual(
 			parser.parseConfFile(
 				"test/example-1.hcnf",
-				{ general: "once", "virtual-host": true }),
+				{ general: "once", "virtual-host": "many" }),
 			{
 				general: {
 					name: null,
@@ -208,5 +208,28 @@ describe("example files", () => {
 					},
 				]
 			});
+	});
+});
+
+describe("validation", () => {
+	it("disallows empty section names if desired", () => {
+		try {
+			parser.parseConfString("foo {}",
+				{ foo: { count: "once", props: { name: "string" } } });
+		} catch (err) {
+			if (err.hconfigParseError)
+				return;
+			else
+				throw err;
+		}
+		throw new Error("Expected error to be thrown");
+	});
+
+	it("defaults to * if specified", () => {
+		assert.deepEqual(
+			parser.parseConfString(
+				"foo { a 10 b hello c true }",
+				{ foo: { count: "once", props: { "*": "any" } } }),
+			{ foo: { name: null, a: 10, b: "hello", c: true } });
 	});
 });
