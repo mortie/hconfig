@@ -12,6 +12,7 @@ Better config files with node.js.
   * [hconfig.parseConfFile(file, sections)](#hconfigparseconffilefile-sections)
   * [hconfig.parseConfString(string, sections)](#hconfigparseconfstringstring-sections)
 - [Error handling](#error-handling)
+- [Validation](#validation)
 - [Syntax](#syntax)
   * [Strings](#strings)
   * [Numbers](#numbers)
