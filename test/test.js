@@ -52,9 +52,9 @@ describe("parser", () => {
 			105.99E-5);
 	});
 	it("only accepts one period in numbers", () => {
-		assert.equal(
-			parser.parseString("10.44.55", true),
-			10.44);
+		assert.deepEqual(
+			parser.parseString("[ 10.44.55 ]", true),
+			[ 10.44, ".55" ]);
 	});
 
 	it("parses strings", () => {
@@ -231,5 +231,25 @@ describe("validation", () => {
 				"foo { a 10 b hello c true }",
 				{ foo: { count: "once", props: { "*": "any" } } }),
 			{ foo: { name: null, a: 10, b: "hello", c: true } });
+	});
+});
+
+describe("strings", () => {
+	it("doesn't expand expand anything in single-quote strings", () => {
+		assert.equal(
+			parser.parseString("'$(FOO) \\t'", true),
+			"$(FOO) \\t");
+	});
+
+	it("expands environment variables", () => {
+		assert.equal(
+			parser.parseString('"$(USER)"', true),
+			process.env.USER);
+	});
+
+	it("expands escape sequences", () => {
+		assert.equal(
+			parser.parseString('"\\\\\\\\ \\" \\f \\n \\r \\t \\u4444"', true),
+			"\\\\ \" \f \n \r \t \u4444");
 	});
 });

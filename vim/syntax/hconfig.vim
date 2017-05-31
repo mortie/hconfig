@@ -8,8 +8,9 @@ if exists("b:current_syntax")
 endif
 
 syn keyword hcnfKeyword true false null
-syn match hcnfNumber '\<\d*\(\.\d*\)\=\([eE][+-]\=\d*\)\=\>'
+syn match hcnfNumber '\<\([-]\)\=\d*\(\.\d*\)\=\([eE][+-]\=\d*\)\=\>'
 syn region hcnfString start='"' end='"'
+syn region hcnfString start="'" end="'"
 syn match hcnfComment '#.*$'
 syn match hcnfSpecial '[\[\]{}]'
 

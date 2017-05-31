@@ -29,6 +29,11 @@ HConfig is a configuration file parser with JSON-like syntax but without all the
 cruft. It's not intended to be used for communication between computers, but
 rather to be written by humans.
 
+Warning: HConfig expects input to be from a trusted source. While there's no
+extremely serious stuff like remote code execution, HConfig could expose
+information about your system to an attacker through expanding environment
+variables.
+
 Here's an example config file for an imaginary web server:
 
 `conf.hcnf:`
@@ -318,6 +323,19 @@ though those only exist when using parseConfFile and parseConfString.
 ### Strings
 
 * A quoted string starts with a `"`, and continues until the next `"`.
+	* `$(FOO)` expands into the environment variable FOO
+	* `\\` => `\`
+	* `\"` => `"`
+	* `\b` => backspace
+	* `\f` => formfeed
+	* `\n` => newline
+	* `\r` => carriage return
+	* `\t` => tab
+	* `\uXXXX` => unicode character
+
+* A quoted string can also start with a `'`. It then continues until the next
+  `'`. This type of string doesn't expand escape sequences or environment
+  variables.
 * An unquoted string is a sequence of any characters other than whitespace,
   `[`, `]`, `[`, and `}`, and which doesn't match any other syntax.
 

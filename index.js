@@ -39,6 +39,21 @@ var TokenTypes = new Enum(
 	"CLOSEBRACE",
 	"UNKNOWN");
 
+function expandEnv(str) {
+	var rx = /\$\((\S+)\)/;
+	var ret = "";
+	while (rx.test(str)) {
+		var m = str.match(rx);
+		if (m === null)
+			break;
+
+		ret += str.substr(0, m.index);
+		ret += process.env[m[1]];
+		str = str.substr(m.index + m[0].length);
+	}
+	return ret + str;
+}
+
 function makeToken(type, linenr, content, isQuoted) {
 	if (content == null) {
 		content = TokenTypes.match(type, {
@@ -183,10 +198,71 @@ class TokenStream {
 			return makeToken(TokenTypes.NUMBER, this.linenr, content);
 		}
 
-		// string
+		// string "
 		else if (curr == '"') {
+			var prev = curr;
 			this.readChar();
-			while (this.currChar != '"') {
+			var ch;
+
+			while (ch != '"') {
+				ch = this.currChar;
+				if (prev == '\\') {
+					if (ch == '\\') {
+						ch = '\0';
+						content += '\\';
+					} else if (ch == '"') {
+						ch = '\0';
+						content += '"';
+					} else if (ch == 'b')
+						ch = '\b';
+					else if (ch == 'f')
+						ch = '\f';
+					else if (ch == 'n')
+						ch = '\n';
+					else if (ch == 'r')
+						ch = '\r';
+					else if (ch == 't')
+						ch = '\t';
+					else if (ch == 'u') {
+						var hex = "";
+						this.readChar();
+						hex += this.currChar;
+						this.readChar();
+						hex += this.currChar;
+						this.readChar();
+						hex += this.currChar;
+						this.readChar();
+						hex += this.currChar;
+
+						if (!/[0-9a-fA-F]{4}/.test(hex)) {
+							var t = makeToken(TokenTypes.STRING, this.linenr, "", true);
+							this.err(t, "Invalid escape sequence: \\u"+hex);
+						}
+						var num = parseInt(hex, 16);
+						ch = String.fromCharCode(num);
+					} else {
+						var t = makeToken(TokenTypes.STRING, this.linenr, "", true);
+						this.err(t, "Invalid escape sequence: \\"+ch);
+					}
+				} else if (ch == '"') {
+					break;
+				}
+
+				if (ch != '\\' && ch != '\0')
+					content += ch;
+
+				prev = ch;
+				this.readChar();
+			}
+
+			content = expandEnv(content);
+			return makeToken(TokenTypes.STRING, this.linenr, content, true);
+		}
+
+		// string '
+		else if (curr == "'") {
+			this.readChar();
+			while (this.currChar != "'") {
 				content += this.currChar;
 				this.readChar();
 			}
@@ -241,11 +317,19 @@ class TokenStream {
 
 	expect(type) {
 		var t = this.currToken;
-		if (t.type !== type)
-			this.err(
-				t,
-				"Expected "+TokenTypes.str(type)+", got "+
-				TokenTypes.str(t.type));
+		if (t.type !== type) {
+			if (type === TokenTypes.EOF) {
+				this.err(
+					t,
+					"Gibberish at the end of input: "+
+					TokenTypes.str(t.type));
+			} else {
+				this.err(
+					t,
+					"Expected "+TokenTypes.str(type)+", got "+
+					TokenTypes.str(t.type));
+			}
+		}
 
 		this.readToken();
 		return t;
@@ -359,7 +443,7 @@ class Parser {
 		if (types == null) {
 			this.stream.err(
 				token,
-				"Section "+token.content+": Unknown property "+i);
+				"Section "+token.content+": Unknown property '"+i+"'");
 		}
 
 		if (types.indexOf("any") !== -1)
@@ -545,9 +629,10 @@ class Parser {
 
 		if (stream.currToken.type === TokenTypes.BOOL)
 			return stream.expect(TokenTypes.BOOL).content;
-		if (stream.currToken.type === TokenTypes.NULL)
+		if (stream.currToken.type === TokenTypes.NULL) {
+			stream.expect(TokenTypes.NULL);
 			return null;
-		if (stream.currToken.type === TokenTypes.STRING)
+		} if (stream.currToken.type === TokenTypes.STRING)
 			return stream.expect(TokenTypes.STRING).content;
 		if (stream.currToken.type === TokenTypes.NUMBER)
 			return parseFloat(stream.expect(TokenTypes.NUMBER).content);
@@ -565,19 +650,25 @@ class Parser {
 function parseFile(file, includeRoot) {
 	var stream = new FileTokenStream(file);
 	var parser = new Parser(stream);
+	var val;
 	if (includeRoot)
-		return parser.parseValue();
+		val = parser.parseValue();
 	else
-		return parser.parseObject(true /* ignoreBraces */);
+		val = parser.parseObject(true /* ignoreBraces */);
+	stream.expect(TokenTypes.EOF);
+	return val;
 }
 
 function parseString(str, includeRoot) {
 	var stream = new StringTokenStream(str);
 	var parser = new Parser(stream);
+	var val;
 	if (includeRoot)
-		return parser.parseValue();
+		val = parser.parseValue();
 	else
-		return parser.parseObject(true /* ignoreBraces */);
+		val = parser.parseObject(true /* ignoreBraces */);
+	stream.expect(TokenTypes.EOF);
+	return val;
 }
 
 function parseConfFile(file, sections) {
