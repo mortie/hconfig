@@ -39,7 +39,7 @@ var TokenTypes = new Enum(
 	"CLOSEBRACE",
 	"UNKNOWN");
 
-function expandEnv(str) {
+function expandEnv(stream, token, str) {
 	var rx = /\$\((\S+)\)/;
 	var ret = "";
 	while (rx.test(str)) {
@@ -49,6 +49,9 @@ function expandEnv(str) {
 
 		ret += str.substr(0, m.index);
 		ret += process.env[m[1]];
+		if (process.env[m[1]] === undefined) {
+			stream.warn(token, "Environment variable "+m[1]+" doesn't exist");
+		}
 		str = str.substr(m.index + m[0].length);
 	}
 	return ret + str;
@@ -255,8 +258,10 @@ class TokenStream {
 				this.readChar();
 			}
 
-			content = expandEnv(content);
-			return makeToken(TokenTypes.STRING, this.linenr, content, true);
+			var t = makeToken(TokenTypes.STRING, this.linenr, "", true);
+			content = expandEnv(this, t, content);
+			t.content = content;
+			return t;
 		}
 
 		// string '
@@ -301,7 +306,7 @@ class TokenStream {
 
 	warn(token, msg) {
 		console.error(
-			this.errFormat(token)+": "+msg);
+			"Warning: "+this.errFormat(token)+": "+msg);
 	}
 
 	err(token, msg) {
