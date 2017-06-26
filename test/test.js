@@ -4,66 +4,66 @@ var parser = require("..");
 
 describe("parser", () => {
 	it("parses booleans", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("true", true),
 			true);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("false", true),
 			false);
 	});
 
 	it("parses null", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("null", true),
 			null);
 	});
 
 	it("parses numbers", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105", true),
 			105);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("103.995", true),
 			103.995);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("-10", true),
 			-10);
 	});
 	it("parses positive exponential notation", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99e5", true),
 			105.99e5);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99e+5", true),
 			105.99e5);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99E5", true),
 			105.99e5);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99E+5", true),
 			105.99e5);
 	});
 	it("parses negative exponential notation", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99e-5", true),
 			105.99e-5);
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("105.99E-5", true),
 			105.99E-5);
 	});
 	it("only accepts one period in numbers", () => {
 		assert.deepEqual(
 			parser.parseString("[ 10.44.55 ]", true),
-			[ 10.44, ".55" ]);
+			[ "10.44.55" ]); // string, not number
 	});
 
 	it("parses strings", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("\"Hello World\"", true),
 			"Hello World");
 	});
 	it("parses strings without quotes", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("hello-world", true),
 			"hello-world");
 	});
@@ -236,19 +236,19 @@ describe("validation", () => {
 
 describe("strings", () => {
 	it("doesn't expand expand anything in single-quote strings", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString("'$(FOO) \\t'", true),
 			"$(FOO) \\t");
 	});
 
 	it("expands environment variables", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString('"$(USER)"', true),
 			process.env.USER);
 	});
 
 	it("expands escape sequences", () => {
-		assert.equal(
+		assert.strictEqual(
 			parser.parseString('"\\\\\\\\ \\" \\f \\n \\r \\t \\u4444"', true),
 			"\\\\ \" \f \n \r \t \u4444");
 	});

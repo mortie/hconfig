@@ -151,56 +151,6 @@ class TokenStream {
 			return this._nextToken();
 		}
 
-		// number
-		else if (
-				(next >= '0' && next <= '9' && curr == '-') ||
-				(curr >= '0' && curr <= '9')) {
-
-			var containsDot = false;
-			var containsExp = false;
-			var cont = () => {
-
-				// Disallow null (i.e EOF)
-				if (this.nextChar == null)
-					return false;
-
-				// Allow numbers
-				if (this.nextChar >= '0' && this.nextChar <= '9')
-					return true;
-
-				// Allow dots only once
-				if (!containsDot && this.nextChar == '.') {
-					containsDot = true;
-					return true;
-				}
-
-				// Allow exponents
-				if (
-						!containsExp &&
-						(this.nextChar == 'e' || this.nextChar == 'E')) {
-					containsExp = true;
-					return true;
-				}
-
-				// Allow + and - in exponents
-				if (
-						(this.nextChar == '-' || this.nextChar == '+') &&
-						(this.currChar == 'e' || this.currChar == 'E'))  {
-					return true;
-				}
-
-				return false;
-			};
-
-			content += curr;
-			while (cont()) {
-				content += this.nextChar;
-				this.readChar()
-			}
-
-			return makeToken(TokenTypes.NUMBER, this.linenr, content);
-		}
-
 		// string "
 		else if (curr == '"') {
 			var prev = curr;
@@ -278,7 +228,7 @@ class TokenStream {
 		// string without quotes, or bool
 		else {
 			content += this.currChar;
-			cont = () => (
+			var cont = () => (
 				!isspace(this.nextChar) &&
 				this.nextChar != '[' &&
 				this.nextChar != ']' &&
@@ -289,12 +239,16 @@ class TokenStream {
 				this.readChar();
 			}
 
+			var numRx = /^\-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+
 			if (content === "true")
 				return makeToken(TokenTypes.BOOL, this.linenr, true);
 			else if (content === "false")
 				return makeToken(TokenTypes.BOOL, this.linenr, false);
 			else if (content === "null")
 				return makeToken(TokenTypes.NULL, this.linenr);
+			else if (numRx.test(content))
+				return makeToken(TokenTypes.NUMBER, this.linenr, content);
 			else
 				return makeToken(TokenTypes.STRING, this.linenr, content, false);
 		}
