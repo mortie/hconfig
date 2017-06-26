@@ -337,7 +337,9 @@ though those only exist when using parseConfFile and parseConfString.
   `'`. This type of string doesn't expand escape sequences or environment
   variables.
 * An unquoted string is a sequence of any characters other than whitespace,
-  `[`, `]`, `[`, and `}`, and which doesn't match any other syntax.
+  `[`, `]`, `[`, and `}`, and which doesn't match any other syntax. Note that
+  strings can start with numbers just fine, as long as they don't entirely
+  match the syntax for numbers - `200x400` will be interpreted as a string.
 
 ### Numbers
 
