@@ -89,6 +89,46 @@ describe("parser", () => {
 			parser.parseString("{ foo 10 bar { no 4 hey 33 } }", true),
 			{ foo: 10, bar: { no: 4, hey: 33 } });
 	});
+
+	it("parses arrays in objects", () => {
+		assert.deepEqual(
+			parser.parseString("{ foo 10 bar [ no 4 hey 33 ] }", true),
+			{ foo: 10, bar: [ "no", 4, "hey", 33 ] });
+	});
+	it("parses objects in arrays", () => {
+		assert.deepEqual(
+			parser.parseString("[ foo 10 bar { no 4 hey 33 } ]", true),
+			[ "foo", 10, "bar", { no: 4, hey: 33 } ]);
+	});
+
+	it("does not parse inline comments", () => {
+		assert.deepEqual(
+			parser.parseString("null # a comment'\"]}[{", true),
+			null);
+		assert.deepEqual(
+			parser.parseString("after-strings # a comment'\"]}[{", true),
+			"after-strings");
+		assert.deepEqual(
+			parser.parseString("[after arrays] # a comment'\"]}[{", true),
+			[ "after", "arrays" ]);
+		assert.deepEqual(
+			parser.parseString("{after objects} # a comment'\"]}[{", true),
+			{ after: "objects" });
+	});
+	it("does not parse whole line comments", () => {
+		assert.deepEqual(
+			parser.parseString("# a comment'\"]}[{\nnull", true),
+			null);
+		assert.deepEqual(
+			parser.parseString("# a comment'\"]}[{\nbefore-strings", true),
+			"before-strings");
+		assert.deepEqual(
+			parser.parseString("# a comment'\"]}[{\n[before arrays]", true),
+			[ "before", "arrays" ]);
+		assert.deepEqual(
+			parser.parseString("# a comment'\"]}[{\n{before objects}", true),
+			{ before: "objects" });
+	});
 });
 
 describe("interface", () => {
@@ -235,7 +275,7 @@ describe("validation", () => {
 });
 
 describe("strings", () => {
-	it("doesn't expand expand anything in single-quote strings", () => {
+	it("doesn't expand anything in single-quote strings", () => {
 		assert.strictEqual(
 			parser.parseString("'$(FOO) \\t'", true),
 			"$(FOO) \\t");
@@ -251,5 +291,55 @@ describe("strings", () => {
 		assert.strictEqual(
 			parser.parseString('"\\\\\\\\ \\" \\f \\n \\r \\t \\u4444"', true),
 			"\\\\ \" \f \n \r \t \u4444");
+	});
+});
+
+describe("unquoted strings", () => {
+	it("doesn't expand anything in unquoted strings", () => {
+		assert.strictEqual(
+			parser.parseString("$(FOO)'\"#\\n\\t", true),
+			"$(FOO)'\"#\\n\\t");
+	});
+
+	it("{ starts an object", () => {
+		assert.deepEqual(
+			parser.parseString("key{ key value }", false),
+			{ key: { key: "value" } });
+	});
+	it("key starts immediately after {", () => {
+		assert.deepEqual(
+			parser.parseString("key {key value }", false),
+			{ key: { key: "value" } });
+	});
+	it("} ends an object", () => {
+		assert.deepEqual(
+			parser.parseString("key { key value}", false),
+			{ key: { key: "value" } });
+	});
+	it("key ends immediately after }", () => {
+		assert.deepEqual(
+			parser.parseString("key { key value }key2 value2", false),
+			{ key: { key: "value" }, key2: "value2" });
+	});
+
+	it("[ starts an array", () => {
+		assert.deepEqual(
+			parser.parseString("key[ key value ]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("key starts immediately after [", () => {
+		assert.deepEqual(
+			parser.parseString("key [key value ]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("] ends an array", () => {
+		assert.deepEqual(
+			parser.parseString("key [ key value]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("key ends immediately after ]", () => {
+		assert.deepEqual(
+			parser.parseString("key [ key value ]key2 value2", false),
+			{ key: [ "key", "value" ], key2: "value2" });
 	});
 });
