@@ -293,3 +293,53 @@ describe("strings", () => {
 			"\\\\ \" \f \n \r \t \u4444");
 	});
 });
+
+describe("unquoted strings", () => {
+	it("doesn't expand anything in unquoted strings", () => {
+		assert.strictEqual(
+			parser.parseString("$(FOO)'\"#\\n\\t", true),
+			"$(FOO)'\"#\\n\\t");
+	});
+
+	it("{ starts an object", () => {
+		assert.deepEqual(
+			parser.parseString("key{ key value }", false),
+			{ key: { key: "value" } });
+	});
+	it("key starts immediately after {", () => {
+		assert.deepEqual(
+			parser.parseString("key {key value }", false),
+			{ key: { key: "value" } });
+	});
+	it("} ends an object", () => {
+		assert.deepEqual(
+			parser.parseString("key { key value}", false),
+			{ key: { key: "value" } });
+	});
+	it("key ends immediately after }", () => {
+		assert.deepEqual(
+			parser.parseString("key { key value }key2 value2", false),
+			{ key: { key: "value" }, key2: "value2" });
+	});
+
+	it("[ starts an array", () => {
+		assert.deepEqual(
+			parser.parseString("key[ key value ]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("key starts immediately after [", () => {
+		assert.deepEqual(
+			parser.parseString("key [key value ]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("] ends an array", () => {
+		assert.deepEqual(
+			parser.parseString("key [ key value]", false),
+			{ key: [ "key", "value" ] });
+	});
+	it("key ends immediately after ]", () => {
+		assert.deepEqual(
+			parser.parseString("key [ key value ]key2 value2", false),
+			{ key: [ "key", "value" ], key2: "value2" });
+	});
+});
