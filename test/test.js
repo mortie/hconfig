@@ -89,6 +89,17 @@ describe("parser", () => {
 			parser.parseString("{ foo 10 bar { no 4 hey 33 } }", true),
 			{ foo: 10, bar: { no: 4, hey: 33 } });
 	});
+
+	it("parses arrays in objects", () => {
+		assert.deepEqual(
+			parser.parseString("{ foo 10 bar [ no 4 hey 33 ] }", true),
+			{ foo: 10, bar: [ "no", 4, "hey", 33 ] });
+	});
+	it("parses objects in arrays", () => {
+		assert.deepEqual(
+			parser.parseString("[ foo 10 bar { no 4 hey 33 } ]", true),
+			[ "foo", 10, "bar", { no: 4, hey: 33 } ]);
+	});
 });
 
 describe("interface", () => {
