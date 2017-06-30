@@ -297,8 +297,13 @@ describe("strings", () => {
 describe("unquoted strings", () => {
 	it("doesn't expand anything in unquoted strings", () => {
 		assert.strictEqual(
-			parser.parseString("$(FOO)'\"#\\n\\t", true),
-			"$(FOO)'\"#\\n\\t");
+			parser.parseString("$(FOO)'\"\\n\\t", true),
+			"$(FOO)'\"\\n\\t");
+	});
+	it("# ends an unquoted string", () => {
+		assert.strictEqual(
+			parser.parseString("$(FOO)'\"#\\n\\tabc", true),
+			"$(FOO)'\"");
 	});
 
 	it("{ starts an object", () => {
