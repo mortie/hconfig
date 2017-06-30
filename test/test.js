@@ -275,7 +275,7 @@ describe("validation", () => {
 });
 
 describe("strings", () => {
-	it("doesn't expand expand anything in single-quote strings", () => {
+	it("doesn't expand anything in single-quote strings", () => {
 		assert.strictEqual(
 			parser.parseString("'$(FOO) \\t'", true),
 			"$(FOO) \\t");
