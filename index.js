@@ -230,6 +230,7 @@ class TokenStream {
 			content += this.currChar;
 			var cont = () => (
 				!isspace(this.nextChar) &&
+				this.nextChar != '#' &&
 				this.nextChar != '[' &&
 				this.nextChar != ']' &&
 				this.nextChar != '{' &&
